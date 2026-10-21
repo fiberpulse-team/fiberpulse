@@ -76,8 +76,11 @@ async function callTool(tool,input){
  if(tool==="get_values"){
   var rg=String(input.range||""),m2=rg.match(/^'(.*)'!/),tab=m2?m2[1].replace(/''/g,"'"):"";
   if(k&&tab!=="@link"){var j2=await getJson("https://sheets.googleapis.com/v4/spreadsheets/"+id+"/values/"+encodeURIComponent(rg)+"?majorDimension=ROWS&key="+encodeURIComponent(k));return {values:j2.values||[]}}
-  var gid=gidMap[id+"|"+tab],u=gid!=null&&gid!==""?"https://docs.google.com/spreadsheets/d/"+id+"/gviz/tq?tqx=out:csv&headers=0&gid="+gid:(tab&&tab!=="@link"?"https://docs.google.com/spreadsheets/d/"+id+"/gviz/tq?tqx=out:csv&headers=0&sheet="+encodeURIComponent(tab):"https://docs.google.com/spreadsheets/d/"+id+"/gviz/tq?tqx=out:csv&headers=0");
-  return {values:parseCsv(await getText(u))}}
+  var gid=gidMap[id+"|"+tab],base="https://docs.google.com/spreadsheets/d/"+id,us=[];
+  if(gid!=null&&gid!=="")us.push(base+"/export?format=csv&gid="+gid,base+"/gviz/tq?tqx=out:csv&headers=0&gid="+gid);
+  else if(tab&&tab!=="@link")us.push(base+"/gviz/tq?tqx=out:csv&headers=0&sheet="+encodeURIComponent(tab));
+  else us.push(base+"/export?format=csv",base+"/gviz/tq?tqx=out:csv&headers=0");
+  var lastE=null;for(var ui=0;ui<us.length;ui++){try{return {values:parseCsv(await getText(us[ui]))}}catch(e){lastE=e}}throw lastE}
  throw perr("unsupported","tool support nahi: "+tool)}
 var mcp={watchTool:function(server,tool,input,handler,opts){var stop=false,tm=null,ms=(opts&&opts.refetchInterval)||0;
  async function run(){if(stop)return;var failed=false;try{var r=await callTool(tool,input);if(!stop)handler({type:"result",result:{structuredContent:r}})}catch(e){failed=true;if(!stop)handler({type:"error",error:{code:e.code||"fetch_failed",message:e.message||String(e)}})}if(!stop&&ms)tm=setTimeout(run,failed?Math.min(ms,20000):ms)}
