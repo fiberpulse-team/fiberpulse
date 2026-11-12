@@ -153,7 +153,7 @@ if("serviceWorker" in navigator&&/^https?:$/.test(location.protocol)){window.add
 <div class="two"><div class="card"><h3>Repeat Complaints (2+ in 30 days) <a class="vl" data-an="rep">View details →</a></h3><div id="tRep"></div></div><div class="card"><h3>Issue-wise (Fault Type) <a class="vl" data-an="iss">View details →</a></h3><div id="tIss"></div></div></div>
 <div class="card"><h3>SLA Breach Tickets <a class="vl" data-an="br">View details →</a></h3><div id="tBr"></div></div></section>
 
-<section id="an" class="hide"><div class="anbar" id="anTabs"></div><div class="row" style="margin-top:12px"><label style="margin:0">Month</label><select id="anMon"></select><span class="note" id="anNote" style="margin:0"></span></div><div class="card"><h3 id="anT"></h3><div id="anCh"></div></div><div class="card" id="anDc"><h3 id="anDt">Ticket Details</h3><div class="sc" id="anD"><div class="note">Click a bar to see its tickets here.</div></div></div></section>
+<section id="an" class="hide"><div class="anbar" id="anTabs"></div><div class="row" style="margin-top:12px"><label style="margin:0">Month</label><select id="anMon"></select><span class="note" id="anNote" style="margin:0"></span></div><div class="card" id="anCc"><h3 id="anT"></h3><div id="anCh"></div></div><div class="card" id="anDc"><h3 id="anDt">Ticket Details</h3><div class="sc" id="anD"><div class="note">Click a bar to see its tickets here.</div></div></div></section>
 
 <section id="off" class="hide"><div class="card"><h3>Office Areas</h3><p class="note" style="margin-top:0">Assign each area to an office once. Every future ticket from that area is placed under that office automatically.</p><div id="offNew"></div><div class="two" id="offCols"></div></div></section>
 
@@ -573,6 +573,19 @@ add(["Team","Total","Resolved","Pending","SLA Met","SLA Breached","SLA %","Avg R
 const by=(key,nm)=>{const g={};L.forEach(t=>{const k=(t[key]||"").toString().trim()||nm;(g[k]=g[k]||[]).push(t)});return Object.entries(g).map(([k,a])=>[k,stat(a)])};
 by("team","Not Mentioned").sort((a,b)=>b[1].n-a[1].n).forEach(([k,s])=>add(tr(k,s)));
 add(tr("Total",T,{bg:LB,c:NV}));
+add([],10);
+// office dashboard
+merged("OFFICE KPI (JT Office / Cantt Office)",{b:true,sz:12,c:"FFFFFF",bg:MB,h:"left"},22);
+add(["Office","Total","Resolved","Pending","SLA Met","SLA Breached","SLA %","Avg Resolution","Max Resolution","Total Delay (hrs)","Repeat Tickets"].map(v=>({v,s:hd})),32);
+{const om=offMap(),og={};L.forEach(t=>{const k=offOf(t,om);(og[k]=og[k]||[]).push(t)});
+OFF.map(x=>x[1]).concat(og[NA]?[NA]:[]).forEach(k=>add(tr(k,stat(og[k]||[]))));add(tr("Total",T,{bg:LB,c:NV}))}
+add([],10);
+// team-wise work done (a ticket handled by two teams counts for each)
+merged("TEAM-WISE WORK DONE (tickets handled by each team)",{b:true,sz:12,c:"FFFFFF",bg:MB,h:"left"},22);
+add(["Team","Tickets Handled","Resolved","Pending","SLA Met","SLA Breached","SLA %","Share of Total"].map(v=>({v,s:hd})),32);
+{const g={};L.forEach(t=>{const parts=String(t.team||"").split(/\s*(?:,|\+|\/|&|;)\s*/).map(x=>x.trim()).filter(Boolean);(parts.length?parts:["Not Mentioned"]).forEach(k=>(g[k]=g[k]||[]).push(t))});
+Object.entries(g).map(([k,a])=>[k,stat(a)]).sort((a,b)=>b[1].n-a[1].n).forEach(([k,x])=>add([{v:k,s:{...bd,b:true}},{v:x.n,s:{...bd,h:"center",b:true}},{v:x.res,s:{...bd,h:"center"}},{v:x.pend,s:{...bd,h:"center"}},{v:x.met,s:{...bd,h:"center"}},{v:x.br,s:{...bd,h:"center"}},pcell(x.p,bd),T.n?{v:x.n/T.n,s:{...bd,nf:"0%",h:"center"}}:{v:"-",s:{...bd,h:"center"}}]));
+const nr=add([{v:"Note: a ticket handled by more than one team is counted for each of those teams.",s:{i:true,c:"7F7F7F",sz:10}}]);mg.push("A"+nr+":H"+nr)}
 add([],10);
 // customer type
 merged("CUSTOMER TYPE (SLA)",{b:true,sz:12,c:"FFFFFF",bg:MB,h:"left"},22);
